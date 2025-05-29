@@ -1,0 +1,66 @@
+schema: |-
+  definition user {}
+
+  definition department {
+      relation member: user
+      relation manager: user
+      
+      permission read = member + manager
+      permission manage = manager
+  }
+
+  definition job_level {
+      relation holder: user
+      
+      permission has_level = holder
+  }
+
+  definition document {
+      relation owner: user
+      relation department_access: department
+      relation min_level_access: job_level
+      relation manager_only: user
+      
+      permission read = owner + department_access->read + (min_level_access->has_level & manager_only)
+      permission edit = owner + (department_access->manage & min_level_access->has_level)
+      permission delete = owner
+  }
+
+  definition secure_document {
+      relation owner: user
+      relation department_access: department  
+      relation min_level_access: job_level
+      relation manager_required: user
+      
+      permission read = owner + (department_access->read & min_level_access->has_level & manager_required)
+      permission edit = owner + (department_access->manage & min_level_access->has_level)
+  }
+relationships: |-
+  //部門關係
+  department:engineering#member@user:alice
+  department:engineering#member@user:bob  
+  department:engineering#manager@user:alice
+  department:tech#member@user:charlie
+
+  //職等關係
+  job_level:level5#holder@user:alice
+  job_level:level3#holder@user:bob
+  job_level:level2#holder@user:charlie
+
+  //文件關係
+  document:project_spec#owner@user:alice
+  document:project_spec#department_access@department:tech
+  document:project_spec#min_level_access@job_level:level3
+  document:project_spec#manager_only@user:alice
+
+
+  //密件
+  secure_document:secure_doc#owner@user:alice
+assertions:
+  assertTrue:
+    - document:project_spec#read@user:alice
+    - document:project_spec#read@user:charlie
+    - department:tech#read@user:charlie
+  assertFalse:
+    - document:project_spec#read@user:bob
+validation: null
