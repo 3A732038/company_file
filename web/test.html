@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>MNIST 分類器</title>
+</head>
+<body>
+    <h2>上傳圖片</h2>
+    <form action="/api/v1/mnist" method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <button type="submit">上傳</button>
+    </form>
+    <img src="static/背景.png" alt="Uploaded Image">  
+</body>
+</html>
