@@ -1,0 +1,100 @@
+definition user {}
+
+// 職級層級定義
+definition job_level {
+    relation holder: user
+    relation department: department
+    relation organization: organization
+    
+    // 職級層級關係 - 高職級可以存取低職級的權限
+    relation senior_to: job_level  // 此職級比其他職級高
+    
+    permission level_access = holder
+    permission senior_access = holder + senior_to->senior_access  // 遞迴：高職級包含所有低職級權限
+}
+
+// 文件安全等級定義
+definition security_level {
+    relation required_job_level: job_level  // 要求的最低職級
+    relation admin: user
+    
+    // 基於職級的權限
+    permission can_read = required_job_level->senior_access + admin
+    permission can_write = required_job_level->senior_access + admin  
+    permission can_delete = admin
+}
+
+// 改進的資源定義
+definition resource {
+    relation owner: user
+    relation co_owner: user | usergroup#member | usergroup#manager
+    relation editor: user | usergroup#member | usergroup#manager
+    relation viewer: user | usergroup#member | usergroup#manager
+    
+    // 安全等級關係
+    relation security_level: security_level
+    
+    // 組織架構關係
+    relation parent_organization: organization 
+    relation parent_department: department
+    relation parent_project: project
+    
+    // 權限定義（結合職級要求）
+    permission delete = owner + co_owner + 
+                       parent_organization->admin_role + parent_department->admin_role +
+                       security_level->can_delete
+                       
+    permission write = owner + co_owner + editor + 
+                      parent_organization->admin_role + parent_department->admin_role +
+                      security_level->can_write
+                      
+    permission read = viewer + editor + co_owner + owner + 
+                     parent_organization->admin_role + parent_department->admin_role +
+                     security_level->can_read
+}
+
+// 用戶群組定義
+definition usergroup {
+    relation manager: user | usergroup#manager
+    relation direct_member: user | usergroup#member
+    relation parent_department: department
+    relation parent_organization: organization
+    
+    permission manager_role = manager
+    permission member = direct_member + manager + parent_department->member
+}
+
+// 部門定義
+definition department {
+    relation admin: user | usergroup#manager
+    relation manager: user | usergroup#manager  
+    relation direct_member: user | usergroup#member
+    relation parent_organization: organization
+    relation usergroup: usergroup
+    
+    permission admin_role = admin + parent_organization->admin_role
+    permission manager_role = manager + admin + parent_organization->admin_role
+    permission member = direct_member + manager + admin + usergroup->member + parent_organization->member
+}
+
+// 組織定義  
+definition organization {
+    relation admin: user | usergroup#manager
+    relation direct_member: user | usergroup#member
+    relation usergroup: usergroup
+    
+    permission admin_role = admin
+    permission member = direct_member + admin + usergroup->member
+}
+
+// 專案定義
+definition project {
+    relation owner: user
+    relation member: user | usergroup#member | usergroup#manager
+    relation department: department
+    relation organization: organization
+    
+    permission manage = owner + department->admin_role + organization->admin_role
+    permission participate = member + owner + department->member
+    permission view = participate + organization->member
+}
