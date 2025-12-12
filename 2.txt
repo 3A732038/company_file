@@ -1,0 +1,30 @@
+flowchart TD
+
+A[使用者提問<br>例:「輪胎溫度異常」]
+
+B[① Query Rewriting Model<br>整合歷史對話→產生可檢索查詢]
+
+C[第一次 RAG 檢索<br>（返回多份文件/長文）]
+
+D{② Clarify Model<br>檢索結果是否模糊或分散？}
+
+E[提出澄清問題給使用者<br>例：「請問是哪種設備？」]
+
+F[使用者回答澄清問題]
+
+G[更新對話歷史並回到 Query Rewriting<br>整理新查詢]
+
+H[再次 RAG 檢索<br>（明確查詢）]
+
+I{Clarify Model<br>結果是否已集中一致？}
+
+J[③ Answer Generation Model<br>生成最終回覆]
+
+K[回覆使用者]
+
+%% 流程
+A --> B --> C --> D
+D -- 是，需澄清 --> E --> F --> G --> H --> I
+I -- 是，仍需澄清 --> E
+I -- 否，不需澄清 --> J --> K
+D -- 否，不需澄清 --> J --> K
