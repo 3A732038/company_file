@@ -1,30 +1,25 @@
 flowchart TD
+    A[使用者輸入]
 
-A[使用者提問<br>例:「輪胎溫度異常」]
+    S{需要摘要嗎？<br/>對話過長 / 多次澄清}
 
-B[① Query Rewriting Model<br>整合歷史對話→產生可檢索查詢]
+    T[Conversation Summary<br/>萃取關鍵事實與未解項]
 
-C[第一次 RAG 檢索<br>（返回多份文件/長文）]
+    B[Query Rewriting<br/>整合 Summary + 對話<br/>補齊上下文]
 
-D{② Clarify Model<br>檢索結果是否模糊或分散？}
+    C[RAG 檢索]
 
-E[提出澄清問題給使用者<br>例：「請問是哪種設備？」]
+    D{Consistency Judge<br/>資訊是否足夠且一致}
 
-F[使用者回答澄清問題]
+    E[Clarify Generator<br/>根據缺失資訊反問]
 
-G[更新對話歷史並回到 Query Rewriting<br>整理新查詢]
+    F[Answer Generator]
 
-H[再次 RAG 檢索<br>（明確查詢）]
+    Z[結束本輪 Graph]
 
-I{Clarify Model<br>結果是否已集中一致？}
-
-J[③ Answer Generation Model<br>生成最終回覆]
-
-K[回覆使用者]
-
-%% 流程
-A --> B --> C --> D
-D -- 是，需澄清 --> E --> F --> G --> H --> I
-I -- 是，仍需澄清 --> E
-I -- 否，不需澄清 --> J --> K
-D -- 否，不需澄清 --> J --> K
+    A --> S
+    S -- 是 --> T --> B
+    S -- 否 --> B
+    B --> C --> D
+    D -- 不一致 --> E --> Z
+    D -- 一致 --> F --> Z
