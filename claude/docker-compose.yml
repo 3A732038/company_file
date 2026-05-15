@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # API Key 從你的 .env 檔讀入，不寫死
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      # Skills 目錄 mount 進容器，方便之後新增 skill 不用重 build
+      - ./skills:/app/skills
+      # 產出的 PPT 檔案存這裡，讓 host 可以存取
+      - ./outputs:/app/outputs
